@@ -1,0 +1,7 @@
+To the client, there are only two things to do: one is to create a regular node in zookeeper /username/filename with the filename as data, another is to set a watch to /username and return the data it get from that node as soon as our server has put the data there and trigger that watch.
+
+To the server, also known as another client of zookeeper, the first thing to do is to acquire a lock. If it succeed to hold the lock, it will combine the children of /username/results and /username/in progress into one single union set. Since it already knows how many chunks there are to be counted, it will choose the smallest number that neither in 'results' nor 'in progress'. With this number, we know which chunk is assigned to us as a task and it also indicates the range of the file we should read in. 
+
+Finally it will release the lock and start to count the character for that specific chunk. After that, it will create a node, whose name is also its number, under the /username/results and put the dictionary into that node, representing the result to that specific chunk, then try to acquire another lock.
+
+This is a leader-less solution, and we also hope the client won't have any burden on calculating, so we will make the last one who discover that the number of existed node under /username/results has already reached the number of chunks should be counted. Then it will merge all the results without releasing its lock in case that others will do the same work. When running experiments, mostly I got stucked by shell script.
